@@ -5,11 +5,11 @@
 #include <time.h>
 #include <stdbool.h>
 
-
+const int LETTERS = 4;
 //constant for "spot it number" aka how many words there can be in total (n * (n-1) + 1)
 const int NUMBER = 13;
 //constant for how many words are in the word bank
-const int WORDS = 14083;
+const int WORDS = 1941;
 //constant for the factorial of the number of letters
 const int PERMUTATIONS = 24;
 
@@ -52,7 +52,7 @@ int main(int argc,  char *argv[])
     //allocate memory for the permutations array
     for (int j = 0; j < PERMUTATIONS; j++)
     {
-        permutedWords[j] = malloc(5);
+        permutedWords[j] = malloc(LETTERS + 1);
     }
 
 
@@ -65,12 +65,12 @@ int main(int argc,  char *argv[])
     for (int j = 0; j < WORDS; j++)
     {
 
-        dictionary[j] = malloc(5);
+        dictionary[j] = malloc(LETTERS + 1);
 
     }
 
     //allocate memory for the buffer to read the dictionary
-    char *buffer = malloc(5);
+    char *buffer = malloc(LETTERS + 1);
     
     //read words from file into the dictionary array
     for (int j = 0; j < WORDS; j++)
@@ -89,7 +89,7 @@ int main(int argc,  char *argv[])
     for (int j = 0; j < NUMBER; j++)
     {
 
-        card[j] = malloc(5);
+        card[j] = malloc(LETTERS+ 1);
 
     }
     
@@ -144,7 +144,7 @@ for(int j = 0; j < loops; j++)
         permute(card[cardCounter], 0, 3);
         
         //for each set, iterate through every permutation of each card
-        for (int q = 0; q < PERMUTATIONS; q++)
+        for (int q = 0; q < PERMUTATIONS && cardCounter < NUMBER; q++)
         {
             currentWord = permutedWords[q];
             isItAWord = checkWord(currentWord, dictionary);
@@ -184,9 +184,12 @@ for(int j = 0; j < loops; j++)
                 //if it's a word, increase counter to look at the next card, permute the new card, and reset q so we check all permutations
                 cardCounter++;
                 countPerms = 0;
-                permute(card[cardCounter], 0, 3);
+                if (cardCounter < NUMBER)
+                {
+                    permute(card[cardCounter], 0, LETTERS - 1);
+                }
                 q = 0;
-                //permute(card[cardCounter], 0, 3);
+                
             }
 
         }
@@ -257,17 +260,17 @@ void makeCards (char *card[NUMBER], char lettersArray [26])
     //plug random characters into the cards
     sprintf(card[0], "%c%c%c%c", a, b, c, d);
     sprintf(card[1], "%c%c%c%c", a, e, f, g);
-    sprintf(card[2], "%c%c%c%c", a, h, i, l);
-    sprintf(card[3], "%c%c%c%c", a, m, n, o);
+    sprintf(card[2], "%c%c%c%c", c, e, i, o);
+    sprintf(card[3], "%c%c%c%c", o, d, f, h);
     sprintf(card[4], "%c%c%c%c", b, e, h, m);
     sprintf(card[5], "%c%c%c%c", b, f, i, n);
-    sprintf(card[6], "%c%c%c%c", c, e, i, o);
+    sprintf(card[6], "%c%c%c%c", a, h, i, l);
     sprintf(card[7], "%c%c%c%c", b, g, l, o);
-    sprintf(card[8], "%c%c%c%c", l, d, e, n);
+    sprintf(card[8], "%c%c%c%c", c, g, h, n);
     sprintf(card[9], "%c%c%c%c", c, f, l, m);
-    sprintf(card[10], "%c%c%c%c", c, g, h, n);
+    sprintf(card[10], "%c%c%c%c", l, d, e, n);
     sprintf(card[11], "%c%c%c%c", m, d, g, i);
-    sprintf(card[12], "%c%c%c%c", o, d, f, h);
+    sprintf(card[12], "%c%c%c%c", a, m, n, o);
 }
 
 
@@ -323,11 +326,11 @@ void permute(char* a, int b, int c)
     int i;
     if (b == c)
     {
-        sprintf(permutedWords[countPerms], "%s", b);
+        sprintf(permutedWords[countPerms], "%s", a);
         countPerms++;
     }
      else {
-        for (i = l; i <= c; i++)
+        for (i = b; i <= c; i++)
             {
                 swap((a + b), (a + i));
                 permute(a, b + 1, c);
