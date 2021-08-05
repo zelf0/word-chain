@@ -4,6 +4,8 @@
 #include <string.h>
 #include <time.h>
 #include <stdbool.h>
+#include <strings.h>
+#include <ctype.h>
 
 const int LETTERS = 5;
 
@@ -16,12 +18,34 @@ const int SPCWORDS = 6773;
 //constant for the factorial of the number of letters
 const int PERMUTATIONS = 120;
 const int EXTRAPERMS = 720;
+const unsigned int N = 20000;
+
+
+typedef struct node
+{
+    char word[7];
+    struct node *next;
+}
+node;
+
 
 //function prototypes
 void makeCards (char *card[NUMBER], char lettersArray [26]);
 void swap(char* x, char* y);
-bool checkWord (char *word, char *bank[], int words);
+bool check(const char *word, node *hashtable[]);
 void permute(char* a, int b, int c);
+bool unload(void);
+bool load(const char *dictionary, node *hashtable[]);
+unsigned int hash(const char *word);
+
+
+
+
+// Hash table
+node *table[N];
+node *specialtable[N];
+
+
 
 //create array to hold the permutations of the card that's being checked
 char *permutedWords[EXTRAPERMS];
@@ -59,60 +83,13 @@ int main(int argc,  char *argv[])
     {
         permutedWords[j] = malloc(LETTERS + 2);
     }
-    
-    // for (int j = 0; j < (26 - NUMBER); j++)
-    // {
-    //     extra[j] = malloc(2);
-    // }
+  
 
 
-
-    //open files
-    FILE *dpoint = fopen("fiveletterwords.txt", "r");
-    FILE *spoint = fopen("sixletterwords.txt", "r");
+    bool loaded = load("fiveletterwords.txt", table);
+    bool spcloaded = load("sixletterwords.txt", specialtable);
     FILE *results = fopen("results.txt", "w");
-
-    //allocate memory for the dictionary
-    char *dictionary[WORDS];
-    for (int j = 0; j < WORDS; j++)
-    {
-
-        dictionary[j] = malloc(LETTERS + 2);
-
-    }
     
-    char *specialDictionary[SPCWORDS];
-    for (int j = 0; j < SPCWORDS; j++)
-    {
-
-        specialDictionary[j] = malloc(LETTERS + 2);
-
-    }
-
-    //allocate memory for the buffer to read the dictionary
-    char *buffer = malloc(LETTERS + 2);
-    
-    //read words from file into the dictionary array
-    for (int j = 0; j < WORDS; j++)
-    {
-
-        fscanf(dpoint, "%s", buffer);
-        sprintf(dictionary[j], "%s", buffer);
-    }
-    
-    
-    for (int j = 0; j < SPCWORDS; j++)
-    {
-
-        fscanf(spoint, "%s", buffer);
-        sprintf(specialDictionary[j], "%s", buffer);
-    }
-    
-    //close words file
-    fclose(dpoint);
-    fclose(spoint);
-    free(buffer);
-
     //allocate memory for cards array
      char *card[NUMBER];
     for (int j = 0; j < NUMBER; j++)
@@ -186,7 +163,7 @@ for(int j = 0; j < loops; j++)
         for (int q = 0; q < PERMUTATIONS && cardCounter < NUMBER; q++)
         {
             currentWord = permutedWords[q];
-            isItAWord = checkWord(currentWord, dictionary, WORDS);
+            isItAWord = check(currentWord, table);
             
             
             // if this card is not a word in any permutation, try adding an extra letter 
@@ -205,7 +182,7 @@ for(int j = 0; j < loops; j++)
                         for (int z = 0; z < EXTRAPERMS && !isItAWord; z++)
                         {
                             currentWord = permutedWords[z];
-                            isItAWord = checkWord(currentWord, specialDictionary, SPCWORDS);
+                            isItAWord = check(currentWord, specialtable);
                             if (isItAWord)
                             {
                                 sprintf(&extra[k], "%c", '0');
@@ -254,10 +231,11 @@ for(int j = 0; j < loops; j++)
                 //if it's a word, increase counter to look at the next card, permute the new card, and reset q so we check all permutations
                 cardCounter++;
                 countPerms = 0;
-                if (cardCounter < NUMBER)
-                {
-                    permute(card[cardCounter], 0, LETTERS - 1);
-                }
+                // if (cardCounter < NUMBER)
+                // {
+                //     permute(card[cardCounter], 0, LETTERS - 1);
+                // }
+                permute(card[cardCounter], 0, 4);
                 q = 0;
             
             }
@@ -279,11 +257,7 @@ for(int j = 0; j < loops; j++)
         free (permutedWords[j]);
     }
 
-    for (int j = 0; j < WORDS; j++)
-    {
-        free (dictionary[j]);
-    }
-
+  
     for (int j = 0; j < NUMBER; j++)
     {
         free (printouts[j]);
@@ -292,6 +266,8 @@ for(int j = 0; j < loops; j++)
     free(special);
 
     fclose(results);
+    
+    bool unloaded = unload();
 }
 
 
@@ -359,7 +335,6 @@ void makeCards (char *card[NUMBER], char lettersArray [26])
     sprintf(card[18], "%c%c%c%c%c", o, e, f, r, w);
     sprintf(card[19], "%c%c%c%c%c", w, c, g, l, t);
     sprintf(card[20], "%c%c%c%c%c", v, f, d, n, t);
-
     
     
     //make extras
@@ -371,43 +346,21 @@ void makeCards (char *card[NUMBER], char lettersArray [26])
     
     
 }
-
-
-bool checkWord (char *word, char *bank[], int words)
+bool check(const char *word, node *hashtable[])
 {
-    //use binary search to look through each word in the dictionary and compare with the given word
-    int  change = words / 2;
-    char *dictionaryWord;
-    int dictionaryPosition = change;
-
-
-    while (change > 0)
+    int index = hash(word);
+    //node *nodeWord = table[index];
+    for (node *nodeWord = hashtable[index]; nodeWord->next != NULL; nodeWord = nodeWord->next)
     {
-        dictionaryWord = bank[dictionaryPosition];
-
-        if (strcmp(word, dictionaryWord) == 0)
+       
+        if (strcasecmp(word, nodeWord->word) == 0)
         {
-
             return true;
         }
-
-        if (strcmp(word, dictionaryWord) > 0)
-        {
-          change = change / 2;
-          dictionaryPosition = dictionaryPosition + change;
-        }
-
-        if (strcmp(word, dictionaryWord) < 0)
-        {
-          change = change / 2;
-          dictionaryPosition = dictionaryPosition - change;
-        }
-
+        //nodeWord = nodeWord->next;
     }
-
     return false;
 }
-
 
 //function to swap characters to be used for permutations
 void swap(char* x, char* y)
@@ -437,3 +390,71 @@ void permute(char* a, int b, int c)
             }
         }
 }
+
+bool load(const char *dictionary, node *hashtable[])
+{
+    FILE *d = fopen(dictionary, "r");
+    
+    if (d == NULL)
+    {
+        return false;
+    }
+    
+    for (int i = 0; i < N; i++)
+    {
+        
+        hashtable[i] = malloc(sizeof(node));
+        hashtable[i]->next = NULL;
+    }
+    
+    char *buffer = malloc(6);
+    while (fscanf(d, "%s", buffer) != EOF) 
+    {
+        //fscanf(d, "%s", word);
+        node *n = malloc(sizeof(node));
+        if (n == NULL)
+        {
+            return false;
+        }
+
+        strcpy(n->word, buffer);
+        int index = hash(buffer);
+        n->next = hashtable[index];
+        hashtable[index] = n;
+        
+    }
+
+    free(buffer);
+    fclose(d);
+    return true;
+    
+}
+
+bool unload(void)
+{
+    //iterate through the array of buckets, each loop frees one bucket
+    for (int i = 0; i < N; i++)
+    {
+        
+        while (table[i] != NULL) 
+        {
+            node *tmp = table[i]->next;
+            free(table[i]);
+            table[i] = tmp;
+        }
+        //free(table[i]);
+    }
+    
+    return true;
+}
+
+unsigned int hash(const char *word)
+{
+    unsigned int count2;
+    unsigned int hashValue = 0;
+    for(count2 = 0; word[count2] != '\0'; count2++)
+        hashValue = word[count2] + (hashValue << 6) + (hashValue << 16) - hashValue;
+ 
+    return (hashValue % N);
+}
+
