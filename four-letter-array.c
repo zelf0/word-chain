@@ -10,21 +10,25 @@ const int LETTERS = 4;
 const int NUMBER = 13;
 //constant for how many words are in the word bank
 const int WORDS = 1941;
+//constant for how many words are in the special word bank (words with the higher number of letters)
+const int SPCWORDS = 2984;
 //constant for the factorial of the number of letters
 const int PERMUTATIONS = 24;
+const int EXTRAPERMS = 120;
 
 //function prototypes
 void makeCards (char *card[NUMBER], char lettersArray [26]);
 void swap(char* x, char* y);
-char *makeDictionary (void);
-bool checkWord (char *word, char *bank[WORDS]);
+bool checkWord (char *word, char *bank[], int words);
 void permute(char* a, int b, int c);
 
+
 //create array to hold the permutations of the card that's being checked
-char *permutedWords[PERMUTATIONS];
+char *permutedWords[EXTRAPERMS];
 int countPerms = 0;
 
-    
+char extra[26 - NUMBER];
+
 int main(int argc,  char *argv[])
 {
     // Check command-line arguments
@@ -33,31 +37,37 @@ int main(int argc,  char *argv[])
         printf("Usage: ./spotit loops minimum\n");
         return 1;
     }
-   
+
     //create variables for number of loops and minimum set size based on command line arguments
     int loops = atoi(argv[1]);
     int minimum = atoi(argv[2]);
-    
+
     //make sure minimum set size is in the appropriate range
     if (minimum < 2 || minimum > NUMBER)
     {
         printf("minimum must be at least 2 and no higher than %i\n", NUMBER);
         return 1;
     }
-    
-    
-    
-    
-    
+
+
+
+
+
     //allocate memory for the permutations array
-    for (int j = 0; j < PERMUTATIONS; j++)
+    for (int j = 0; j < EXTRAPERMS; j++)
     {
-        permutedWords[j] = malloc(LETTERS + 1);
+        permutedWords[j] = malloc(LETTERS + 2);
     }
+
+    // for (int j = 0; j < (26 - NUMBER); j++)
+    // {
+    //     extra[j] = malloc(2);
+    // }
 
 
     //open files
     FILE *dpoint = fopen("fourletterwords.txt", "r");
+    FILE *spoint = fopen("fiveletterwords.txt", "r");
     FILE *results = fopen("results.txt", "w");
 
     //allocate memory for the dictionary
@@ -69,9 +79,18 @@ int main(int argc,  char *argv[])
 
     }
 
+    char *specialDictionary[SPCWORDS];
+    for (int j = 0; j < SPCWORDS; j++)
+    {
+
+        specialDictionary[j] = malloc(LETTERS + 2);
+
+    }
+
+
     //allocate memory for the buffer to read the dictionary
-    char *buffer = malloc(LETTERS + 1);
-    
+    char *buffer = malloc(LETTERS + 2);
+
     //read words from file into the dictionary array
     for (int j = 0; j < WORDS; j++)
     {
@@ -79,9 +98,19 @@ int main(int argc,  char *argv[])
         fscanf(dpoint, "%s", buffer);
         sprintf(dictionary[j], "%s", buffer);
     }
-    
+
+
+    for (int j = 0; j < SPCWORDS; j++)
+    {
+
+        fscanf(spoint, "%s", buffer);
+        sprintf(specialDictionary[j], "%s", buffer);
+    }
+
     //close words file
     fclose(dpoint);
+    fclose(spoint);
+    free(buffer);
 
 
     //allocate memory for cards array
@@ -89,19 +118,19 @@ int main(int argc,  char *argv[])
     for (int j = 0; j < NUMBER; j++)
     {
 
-        card[j] = malloc(LETTERS+ 1);
+        card[j] = malloc(LETTERS + 1);
 
     }
-    
+
     //create array for the alphabet
     char lettersArray[26];
-    
+
      //assign lowercase letter to each position in the array
     for (int j = 0; j < 26; j++)
     {
         lettersArray[j] = j + 97;
     }
-    
+
     //create variables to store characters
     char a;
     char b;
@@ -116,20 +145,22 @@ int main(int argc,  char *argv[])
     char m;
     char n;
     char o;
-    
-    //change seed for rand function so it's not the same every time 
+
+    //change seed for rand function so it's not the same every time
     srand(time(NULL));
-    
+
 //make variables to use to check each permutation of each card
 char *currentWord;
 int cardCounter = 0;
 bool isItAWord;
 
+char *special = malloc(LETTERS + 2);
+
 //allocate buffer memory
 char *printouts[NUMBER];
 for (int j = 0; j < NUMBER; j++)
     {
-        printouts[j] = malloc(30);
+        printouts[j] = malloc(35);
     }
 
 //variable to know how many characters to write
@@ -141,17 +172,49 @@ for(int j = 0; j < loops; j++)
         cardCounter = 0;
         makeCards(card, lettersArray);
         countPerms = 0;
-        permute(card[cardCounter], 0, 3);
-        
+        permute(card[cardCounter], 0, (LETTERS - 1));
+
         //for each set, iterate through every permutation of each card
         for (int q = 0; q < PERMUTATIONS && cardCounter < NUMBER; q++)
         {
             currentWord = permutedWords[q];
-            isItAWord = checkWord(currentWord, dictionary);
+            isItAWord = checkWord(currentWord, dictionary, WORDS);
+
+
+
+            //if this card is not a word in any permutation, try adding an extra letter
+            if (q == PERMUTATIONS - 1 && cardCounter > 0)
+            {
+                //print to a new string the current card plus one extra letter that hasn't been used yet
+                for (int k = 0; k < (26 - NUMBER) && !isItAWord; k++)
+                {
+                    if (extra[k] && extra[k] != '0')
+                    {
+                        //check the special card to see if any permutation is a word
+                        sprintf(special, "%s%c", card[cardCounter], extra[k]);
+                        countPerms = 0;
+                        permute(special, 0, LETTERS);
+                        for (int z = 0; z < EXTRAPERMS && !isItAWord; z++)
+                        {
+                            currentWord = permutedWords[z];
+                            isItAWord = checkWord(currentWord, specialDictionary, SPCWORDS);
+                            if (isItAWord)
+                            {
+                                sprintf(&extra[k], "%c", '0');
+                            }
+                        }
+                    }
+                }
+            }
+
+
+
+
+
             if (isItAWord)
             {
-                /*if less than minimum set, only print to the buffer. 
-                if it's the minimum, write all the previous buffers and the current one. 
+                /*if less than minimum set, only print to the buffer.
+                if it's the minimum, write all the previous buffers and the current one.
                 if it's more, print and write the current one*/
                 if (cardCounter < minimum - 1)
                 {
@@ -203,9 +266,9 @@ for(int j = 0; j < loops; j++)
         free(card[j]);
 
     }
-    for (int j = 0; j < PERMUTATIONS; j++)
+    for (int j = 0; j < EXTRAPERMS; j++)
     {
-        free (permutedWords[j]);
+        free(permutedWords[j]);
     }
 
     for (int j = 0; j < WORDS; j++)
@@ -213,11 +276,17 @@ for(int j = 0; j < loops; j++)
         free (dictionary[j]);
     }
 
+    for (int j = 0; j < SPCWORDS; j++)
+    {
+        free (specialDictionary[j]);
+    }
+
     for (int j = 0; j < NUMBER; j++)
     {
         free (printouts[j]);
     }
 
+    free(special);
 
     fclose(results);
 }
@@ -256,7 +325,7 @@ void makeCards (char *card[NUMBER], char lettersArray [26])
     char m = lettersArray[10];
     char n = lettersArray[11];
     char o = lettersArray[12];
-    
+
     //plug random characters into the cards
     sprintf(card[0], "%c%c%c%c", a, b, c, d);
     sprintf(card[1], "%c%c%c%c", a, e, f, g);
@@ -271,10 +340,17 @@ void makeCards (char *card[NUMBER], char lettersArray [26])
     sprintf(card[10], "%c%c%c%c", l, d, e, n);
     sprintf(card[11], "%c%c%c%c", m, d, g, i);
     sprintf(card[12], "%c%c%c%c", a, m, n, o);
+
+    //make extras
+    for (int k = 0; k < (26 - NUMBER); k++)
+    {
+      sprintf(&extra[k], "%c", lettersArray[NUMBER + k]);
+    }
+
 }
 
 
-bool checkWord (char *word, char *bank[WORDS])
+bool checkWord (char *word, char *bank[], int words)
 {
     //use binary search to look through each word in the dictionary and compare with the given word
     int  change = WORDS / 2;
