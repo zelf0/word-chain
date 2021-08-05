@@ -131,6 +131,11 @@ int main(int argc,  char *argv[])
         lettersArray[j] = j + 97;
     }
 
+    //move q to the second to last position
+    char switchq = lettersArray[16];
+    lettersArray[16] = lettersArray[24];
+    lettersArray[24] = switchq;
+
     //create variables to store characters
     char a;
     char b;
@@ -182,8 +187,9 @@ for(int j = 0; j < loops; j++)
 
 
 
-            //if this card is not a word in any permutation, try adding an extra letter
-            if (q == PERMUTATIONS - 1 && cardCounter > 0)
+            /// if this card is not a word in any permutation, try adding an extra letter 
+            // (only if this set already has two valid cards for time efficiency)
+            if (q == PERMUTATIONS - 1 && cardCounter > 1)
             {
                 //print to a new string the current card plus one extra letter that hasn't been used yet
                 for (int k = 0; k < (26 - NUMBER) && !isItAWord; k++)
@@ -301,11 +307,11 @@ void makeCards (char *card[NUMBER], char lettersArray [26])
   int randomPos;
 
     //shuffles letters randomly
-    for (int j = 0; j < 26; j++)
+    for (int j = 0; j < 23; j++)
     {
 
         temp = lettersArray[j];
-        randomPos = rand() % 25;
+        randomPos = rand() % 22;
         lettersArray[j] = lettersArray[(int) randomPos];
         lettersArray [(int) randomPos] = temp;
 

@@ -25,7 +25,6 @@ const int EXTRAPERMS = 120;
 //function prototypes
 void makeCards (char *card[NUMBER], char lettersArray [26]);
 void swap(char* x, char* y);
-bool checkWord (char *word, char *bank[], int words);
 void permute(char* a, int b, int c);
 bool insertNode(char *input);
 bool check(char *input, int length);
@@ -124,7 +123,10 @@ int main(int argc,  char *argv[])
         lettersArray[j] = j + 97;
     }
     
-
+    //move q to the second to last position
+    char switchq = lettersArray[16];
+    lettersArray[16] = lettersArray[24];
+    lettersArray[24] = switchq;
 
     //create variables to store characters
     char a;
@@ -287,11 +289,11 @@ void makeCards (char *card[NUMBER], char lettersArray [26])
   int randomPos;
 
     //shuffles letters randomly
-    for (int j = 0; j < 26; j++)
+    for (int j = 0; j < 23; j++)
     {
 
         temp = lettersArray[j];
-        randomPos = rand() % 25;
+        randomPos = rand() % 22;
         lettersArray[j] = lettersArray[(int) randomPos];
         lettersArray [(int) randomPos] = temp;
 
@@ -335,41 +337,6 @@ void makeCards (char *card[NUMBER], char lettersArray [26])
 
 }
 
-
-bool checkWord (char *word, char *bank[], int words)
-{
-    //use binary search to look through each word in the dictionary and compare with the given word
-    int  change = WORDS / 2;
-    char *dictionaryWord;
-    int dictionaryPosition = change;
-
-
-    while (change > 0)
-    {
-        dictionaryWord = bank[dictionaryPosition];
-
-        if (strcmp(word, dictionaryWord) == 0)
-        {
-
-            return true;
-        }
-
-        if (strcmp(word, dictionaryWord) > 0)
-        {
-          change = change / 2;
-          dictionaryPosition = dictionaryPosition + change;
-        }
-
-        if (strcmp(word, dictionaryWord) < 0)
-        {
-          change = change / 2;
-          dictionaryPosition = dictionaryPosition - change;
-        }
-
-    }
-
-    return false;
-}
 
 
 //function to swap characters to be used for permutations
