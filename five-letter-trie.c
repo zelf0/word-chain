@@ -129,9 +129,13 @@ int main(int argc,  char *argv[])
     }
 
     //move q to the second to last position
-    char switchq = lettersArray[16];
+    char switcher = lettersArray[16];
     lettersArray[16] = lettersArray[24];
-    lettersArray[24] = switchq;
+    lettersArray[24] = switcher;
+    switcher = lettersArray[9];
+    lettersArray[9] = lettersArray[22];
+    lettersArray[22] = switcher;
+    
    
     //create variables to store characters
     char a;
@@ -301,11 +305,11 @@ void makeCards (char *card[NUMBER], char lettersArray [26])
   int randomPos;
 
     //shuffles non-q letters randomly
-    for (int j = 0; j < 23; j++)
+    for (int j = 0; j < 22; j++)
     {
 
         temp = lettersArray[j];
-        randomPos = rand() % 22;
+        randomPos = rand() % 21;
         lettersArray[j] = lettersArray[(int) randomPos];
         lettersArray [(int) randomPos] = temp;
 

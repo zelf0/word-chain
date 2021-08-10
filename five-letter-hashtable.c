@@ -285,11 +285,11 @@ void makeCards (char *card[NUMBER], char lettersArray [26])
   int randomPos;
 
     //shuffles letters randomly
-    for (int j = 0; j < 23; j++)
+    for (int j = 0; j < 22; j++)
     {
 
         temp = lettersArray[j];
-        randomPos = rand() % 22;
+        randomPos = rand() % 21;
         lettersArray[j] = lettersArray[(int) randomPos];
         lettersArray [(int) randomPos] = temp;
 
