@@ -9,7 +9,7 @@
 
 **Nasty, befit, drips, bravo, decoy, hijack, folks, ampule**
 
-Feel free to try and spot the special rule! Scroll down for the solution.
+###Feel free to try and spot the special rule! Scroll down for the solution.
 
 
 
